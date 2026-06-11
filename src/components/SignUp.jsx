@@ -55,7 +55,7 @@ export default function SignUp() {
 
       setTimeout(() => {
         navigate("/verify-email", {
-          state: { email },
+          state: { email: data.email },
         });
       }, 1000);
     } catch (error) {
