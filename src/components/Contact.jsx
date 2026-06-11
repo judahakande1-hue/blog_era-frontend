@@ -64,13 +64,13 @@ export default function ContactPage() {
             <p>
               <span className="font-semibold">Email:</span>
               <br />
-              support@example.com
+              judahakande1@gmail.com
             </p>
 
             <p>
               <span className="font-semibold">Phone:</span>
               <br />
-              +234 800 123 4567
+              08039249751
             </p>
 
             <p>
