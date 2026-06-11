@@ -8,7 +8,7 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const [toast, setToast] = useState({
@@ -18,50 +18,55 @@ export default function SignUp() {
 
   async function handleSignUp(e) {
     e.preventDefault();
+    setLoading(true);
 
-    const userData = {
-      username: username,
-      email: email,
-      password: password,
-    };
+    try {
+      const userData = {
+        username,
+        email,
+        password,
+      };
 
-    const response = await fetch(
-      "https://blog-api-bovz.onrender.com/api/auth/register",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "https://blog-api-bovz.onrender.com/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
         },
-        body: JSON.stringify(userData),
-      },
-    );
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Signup failed",
+        });
+        return;
+      }
+
+      setToast({
+        type: "success",
+        message: data.message || "Account created successfully",
+      });
+
+      setTimeout(() => {
+        navigate("/verify-email", {
+          state: { email },
+        });
+      }, 1000);
+    } catch (error) {
       setToast({
         type: "error",
-        message: data.message || "Signup failed",
+        message: "Cannot connect to backend. Try again.",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setToast({
-      type: "success",
-      message:
-        data.message ||
-        "Account created. Check your email for verification code.",
-    });
-
-    setTimeout(() => {
-      navigate("/verify-email", {
-        state: {
-          email: data.email,
-        },
-      });
-    }, 1000);
   }
-
   return (
     <div className="min-h-screen bg-gray-400 pt-24 px-4 flex flex-col items-center">
       <div className="w-full max-w-md lg:max-w-3xl flex flex-col-reverse lg:grid lg:grid-cols-2 mt-6 shadow-2xl rounded-xl overflow-hidden">
@@ -138,9 +143,10 @@ export default function SignUp() {
 
             <button
               type="submit"
-              className="w-full sm:w-auto bg-purple-600 text-white mt-3 hover:bg-purple-700 font-bold py-2 px-6 rounded-full"
+              disabled={loading}
+              className="w-full sm:w-auto bg-purple-600 text-white mt-3 hover:bg-purple-700 font-bold py-2 px-6 rounded-full disabled:bg-gray-400"
             >
-              SignUp
+              {loading ? "Signing up..." : "Sign Up"}
             </button>
           </form>
         </div>
