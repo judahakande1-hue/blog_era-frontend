@@ -58,6 +58,11 @@ export default function SignUp() {
       localStorage.setItem("username", data.user.username);
       localStorage.setItem("email", data.user.email);
 
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.user.id || data.user._id);
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("email", data.user.email);
+
       setTimeout(() => {
         navigate("/dashboard");
       }, 1000);
