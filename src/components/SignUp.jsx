@@ -53,10 +53,13 @@ export default function SignUp() {
         message: data.message || "Account created successfully",
       });
 
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.user.id || data.user._id);
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("email", data.user.email);
+
       setTimeout(() => {
-        navigate("/verify-email", {
-          state: { email: data.email },
-        });
+        navigate("/dashboard");
       }, 1000);
     } catch (error) {
       setToast({
