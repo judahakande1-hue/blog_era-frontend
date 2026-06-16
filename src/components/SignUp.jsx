@@ -2,6 +2,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Toast from "./Toast";
+import VerifyEmail from "./VerifyEmail"
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,7 +11,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  
   const [toast, setToast] = useState({
     type: "",
     message: "",
@@ -69,7 +70,7 @@ export default function SignUp() {
     } catch (error) {
       setToast({
         type: "error",
-        message: "Cannot connect to backend. Try again.",
+        message: `Cannot connect to backend. Try again.${error.message}`,
       });
     } finally {
       setLoading(false);
@@ -151,6 +152,7 @@ export default function SignUp() {
 
             <button
               type="submit"
+              
               disabled={loading}
               className="w-full sm:w-auto bg-purple-600 text-white mt-3 hover:bg-purple-700 font-bold py-2 px-6 rounded-full disabled:bg-gray-400"
             >

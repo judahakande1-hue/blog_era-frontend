@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Toast from "./Toast";
 
+const API_URL = "https://blog-api-bovz.onrender.com";
+
 function Profile() {
   const [username, setUsername] = useState(
     localStorage.getItem("username") || "",
@@ -19,6 +21,22 @@ function Profile() {
     message: "",
   });
 
+  function getImageUrl(image) {
+    if (!image) {
+      return "";
+    }
+
+    if (
+      image.startsWith("http") ||
+      image.startsWith("blob:") ||
+      image.startsWith("data:")
+    ) {
+      return image;
+    }
+
+    return `${API_URL}${image}`;
+  }
+
   async function handleProfilePictureChange(e) {
     const file = e.target.files[0];
 
@@ -26,41 +44,53 @@ function Profile() {
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+
+    setProfilePicture(previewUrl);
+
     const token = localStorage.getItem("token");
 
     const formData = new FormData();
     formData.append("profilePicture", file);
 
-    const response = await fetch(
-      "https://blog-api-bovz.onrender.com/api/users/me/profile-picture",
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await fetch(
+        "https://blog-api-bovz.onrender.com/api/users/me/profile-picture",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
         },
-        body: formData,
-      },
-    );
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Profile picture upload failed",
+        });
+        return;
+      }
+
+      if (data.profilePicture && data.profilePicture.startsWith("http")) {
+        localStorage.setItem("profilePicture", data.profilePicture);
+      }
+
+      setToast({
+        type: "success",
+        message: "Profile picture updated successfully",
+      });
+
+      e.target.value = "";
+    } catch (error) {
       setToast({
         type: "error",
-        message: data.message || "Profile picture upload failed",
+        message: "Something went wrong while uploading image",
       });
-      return;
     }
-
-    const fullImageUrl = `https://blog-api-bovz.onrender.com${data.profilePicture}`;
-
-    setProfilePicture(fullImageUrl);
-    localStorage.setItem("profilePicture", fullImageUrl);
-
-    setToast({
-      type: "success",
-      message: "Profile picture updated successfully",
-    });
   }
 
   async function handleSaveProfile(e) {
@@ -68,35 +98,50 @@ function Profile() {
 
     const token = localStorage.getItem("token");
 
-    const response = await fetch("https://blog-api-bovz.onrender.com/api/users/me/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        username,
-        bio,
-      }),
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/users/me/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          username,
+          bio,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Failed to update profile",
+        });
+        return;
+      }
+
+      setUsername(data.username || "");
+      setBio(data.bio || "");
+
+      localStorage.setItem("username", data.username || "");
+      localStorage.setItem("bio", data.bio || "");
+
+      if (data.profilePicture) {
+        setProfilePicture(data.profilePicture);
+        localStorage.setItem("profilePicture", data.profilePicture);
+      }
+
+      setToast({
+        type: "success",
+        message: "Profile updated successfully",
+      });
+    } catch (error) {
       setToast({
         type: "error",
-        message: data.message || "Failed to update profile",
+        message: "Something went wrong while saving profile",
       });
-      return;
     }
-
-    localStorage.setItem("username", data.username);
-    localStorage.setItem("bio", data.bio);
-
-    setToast({
-      type: "success",
-      message: "Profile updated successfully",
-    });
   }
 
   return (
