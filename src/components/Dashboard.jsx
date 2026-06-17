@@ -1,191 +1,295 @@
-import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import Loader from "./Loader";
+import { Link } from "react-router-dom";
+import {
+  PenSquare,
+  Library,
+  Compass,
+  User,
+  MessageCircle,
+  TrendingUp,
+  Sparkles,
+  BookOpen,
+  ArrowRight,
+  LayoutDashboard,
+} from "lucide-react";
+
+const API_URL = "https://blog-api-bovz.onrender.com";
 
 function Dashboard() {
-  const username = localStorage.getItem("username") || "User";
-  const [posts, setPosts] = useState([]);
-  const [totalComments, setTotalComments] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const location = useLocation();
-  const totalPosts = posts.length;
-  const recentPosts = posts.slice(0, 3);
-  const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+  const username = localStorage.getItem("username") || "Writer";
+  const bio = localStorage.getItem("bio") || "No bio added yet.";
+  const profilePicture = localStorage.getItem("profilePicture") || "";
 
-  useEffect(() => {
-    async function getDashboardPosts() {
-      const userId = localStorage.getItem("userId");
-
-      const response = await fetch(
-        "https://blog-api-bovz.onrender.com/api/posts",
-      );
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.log(data.message || "Failed to fetch dashboard posts");
-        return;
-      }
-
-      const myPosts = data.filter((post) => post.author?._id === userId);
-
-      setPosts(myPosts);
-      setLoading(false);
-
-      const commentsResults = await Promise.all(
-        myPosts.map(async (post) => {
-          const commentResponse = await fetch(
-            `https://blog-api-bovz.onrender.com/api/comments/post/${post._id}`,
-          );
-
-          const commentData = await commentResponse.json();
-
-          if (!commentResponse.ok) {
-            return 0;
-          }
-
-          return commentData.length;
-        }),
-      );
-
-      const allComments = commentsResults.reduce(
-        (sum, count) => sum + count,
-        0,
-      );
-
-      setTotalComments(allComments);
+  function getImageUrl(image) {
+    if (!image) {
+      return "";
     }
 
-    getDashboardPosts();
-  }, [location.key]);
+    if (
+      image.startsWith("http") ||
+      image.startsWith("blob:") ||
+      image.startsWith("data:")
+    ) {
+      return image;
+    }
 
-  const publishedPosts = posts.filter(
-    (post) => post.status === "Published",
-  ).length;
-
-  const draftPosts = posts.filter((post) => post.status === "Draft").length;
-
-  if (loading) {
-    return <Loader />;
+    return `${API_URL}${image}`;
   }
+
+  const quickActions = [
+    {
+      title: "Create New Post",
+      description: "Start writing and publish a new article.",
+      icon: PenSquare,
+      link: "/dashboard/create",
+    },
+    {
+      title: "My Posts",
+      description: "View, edit, and manage your own posts.",
+      icon: Library,
+      link: "/dashboard/MyPost",
+    },
+    {
+      title: "Explore Posts",
+      description: "Read posts shared by other BlogEra writers.",
+      icon: Compass,
+      link: "/dashboard/explore",
+    },
+    {
+      title: "Communities",
+      description: "Join topic rooms and share ideas with others.",
+      icon: MessageCircle,
+      link: "/dashboard/communities",
+    },
+  ];
+
   return (
-    <section className="min-h-screen w-full px-4 py-6 sm:px-6 lg:px-8 mb-5">
-      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-[JetBrains] font-bold mb-4">
-        Welcome, {username}!
-      </h1>
-
-      <p className="text-gray-600 text-sm sm:text-base">
-        Here you can write new posts, manage your articles, and check your
-        activity.
-      </p>
-
-      <div className="mt-8 bg-gray-100 p-4 sm:p-5 rounded-2xl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-5 gap-4">
-          <div className="bg-white rounded-xl p-5 text-center">
-            <h2 className="text-base sm:text-lg font-bold">Total Posts:</h2>
-            <p className="text-2xl text-purple-600 font-bold">{totalPosts}</p>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-gradient-to-r from-purple-700 via-indigo-600 to-indigo-900 text-white rounded-3xl p-6 md:p-10 shadow-lg relative overflow-hidden">
+          <div className="absolute right-8 top-8 opacity-20">
+            <Sparkles size={110} />
           </div>
 
-          <div className="bg-white rounded-xl p-5 text-center">
-            <h2 className="text-base sm:text-lg font-bold">Drafts:</h2>
-            <p className="text-2xl text-purple-600 font-bold">{draftPosts}</p>
-          </div>
-
-          <div className="bg-white rounded-xl p-5 text-center">
-            <h2 className="text-base sm:text-lg font-bold">Published:</h2>
-            <p className="text-2xl text-purple-600 font-bold">
-              {publishedPosts}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl p-5 text-center">
-            <h2 className="text-base sm:text-lg font-bold">Views:</h2>
-            <p className="text-2xl text-purple-600 font-bold">{totalViews}</p>
-          </div>
-
-          <div className="bg-white rounded-xl p-5 text-center">
-            <h2 className="text-base sm:text-lg font-bold">Comments:</h2>
-            <p className="text-2xl text-purple-600 font-bold">
-              {totalComments}
-            </p>
-          </div>
-        </div>
-
-        <hr className="border-gray-200" />
-
-        <div className="mt-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h1 className="font-semibold font-[JetBrains Mono] text-lg">
-            Writer Tools
-          </h1>
-
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <Link
-              to="/dashboard/create"
-              className="w-full sm:w-auto text-center hover:bg-purple-50 text-purple-600 px-4 py-2 rounded-md border border-purple-600"
-            >
-              Create New Post
-            </Link>
-
-            <Link
-              to="/dashboard/MyPost"
-              className="w-full sm:w-auto text-center bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md"
-            >
-              My Posts
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-8 sm:mt-12 bg-white p-4 sm:p-5 rounded-xl">
-          <h1 className="font-semibold font-[JetBrains Mono] mb-5 text-lg">
-            My Recent Posts
-          </h1>
-
-          {posts.length === 0 ? (
-            <div className="border-2 border-gray-600 border-dashed text-center p-5 rounded-xl">
-              <p className="text-gray-500 mt-2 text-sm sm:text-base">
-                You haven't written any posts yet. Start creating content to see
-                it here!
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 relative z-10">
+            <div>
+              <p className="uppercase tracking-[0.3em] text-sm text-purple-200">
+                BlogEra Dashboard
               </p>
 
+              <h1 className="text-3xl md:text-5xl font-bold mt-3">
+                Welcome back, {username}
+              </h1>
+
+              <p className="mt-4 text-purple-100 max-w-2xl leading-7">
+                Create, manage, and share your BlogEra posts. Use this dashboard
+                to write new articles, organize your content, update your
+                profile, explore public posts, and join topic communities.
+              </p>
+
+              <div className="flex flex-wrap gap-3 mt-6">
+                <Link
+                  to="/dashboard/create"
+                  className="bg-white text-purple-700 px-5 py-3 rounded-2xl font-semibold hover:bg-purple-50 transition flex items-center gap-2"
+                >
+                  <PenSquare size={18} />
+                  Write a Post
+                </Link>
+
+                <Link
+                  to="/dashboard/explore"
+                  className="bg-white/10 border border-white/20 text-white px-5 py-3 rounded-2xl font-semibold hover:bg-white/20 transition flex items-center gap-2"
+                >
+                  <Compass size={18} />
+                  Explore
+                </Link>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-5 min-w-[260px]">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-white text-purple-700 flex items-center justify-center font-bold text-2xl overflow-hidden">
+                  {profilePicture ? (
+                    <img
+                      src={getImageUrl(profilePicture)}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    username.charAt(0).toUpperCase()
+                  )}
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-bold">{username}</h2>
+                  <p className="text-purple-100 text-sm">BlogEra Writer</p>
+                </div>
+              </div>
+
+              <p className="text-purple-100 text-sm leading-6 mt-4">{bio}</p>
+
               <Link
-                to="/dashboard/create"
-                className="inline-block mt-5 bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl"
+                to="/dashboard/profile"
+                className="mt-5 inline-flex items-center gap-2 text-white font-semibold hover:underline"
               >
-                Create New Post
+                Edit Profile
+                <ArrowRight size={16} />
               </Link>
             </div>
-          ) : (
-            <div className="space-y-5">
-              {recentPosts.map((post) => (
-                <div key={post._id} className="border-b border-gray-200 pb-4">
-                  <h2 className="font-bold mb-2 text-base sm:text-lg break-words">
-                    {post.title}
-                  </h2>
+          </div>
+        </div>
 
-                  <p className="text-purple-600 text-sm sm:text-base">
-                    {post.category}
-                  </p>
-
-                  <p className="text-gray-600 text-sm sm:text-base break-words">
-                    {post.content.slice(0, 120)}...
-                  </p>
-
-                  <p className="text-gray-700 py-1 text-sm sm:text-base">
-                    Status: {post.status}
-                  </p>
-
-                  <Link
-                    to={`/dashboard/view/${post._id}`}
-                    className="text-purple-600 py-2 rounded-md text-sm sm:text-base"
-                  >
-                    View full post
-                  </Link>
-                </div>
-              ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+              <BookOpen size={24} />
             </div>
-          )}
+
+            <h3 className="text-2xl font-bold text-gray-900 mt-5">Write</h3>
+
+            <p className="text-gray-500 mt-2 leading-6">
+              Create useful blog posts and share your thoughts with readers.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+              <LayoutDashboard size={24} />
+            </div>
+
+            <h3 className="text-2xl font-bold text-gray-900 mt-5">Manage</h3>
+
+            <p className="text-gray-500 mt-2 leading-6">
+              Organize your posts, edit your content, and update your profile.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+              <TrendingUp size={24} />
+            </div>
+
+            <h3 className="text-2xl font-bold text-gray-900 mt-5">Connect</h3>
+
+            <p className="text-gray-500 mt-2 leading-6">
+              Explore public posts and join communities based on your interests.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 mt-8">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Quick Actions
+                </h2>
+
+                <p className="text-gray-500 mt-1">
+                  Choose what you want to do next on BlogEra.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+
+                return (
+                  <Link
+                    key={action.title}
+                    to={action.link}
+                    className="group border border-gray-100 rounded-3xl p-5 hover:shadow-md hover:border-purple-200 transition bg-gray-50 hover:bg-white"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition">
+                        <Icon size={23} />
+                      </div>
+
+                      <ArrowRight
+                        size={20}
+                        className="text-gray-300 group-hover:text-purple-600 transition"
+                      />
+                    </div>
+
+                    <h3 className="text-lg font-bold text-gray-900 mt-5">
+                      {action.title}
+                    </h3>
+
+                    <p className="text-gray-500 mt-2 leading-6">
+                      {action.description}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Today’s Focus
+            </h2>
+
+            <p className="text-gray-500 mt-2 leading-6">
+              Keep your BlogEra account active by writing, improving your
+              profile, and reading what others have shared.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              <div className="flex gap-3">
+                <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  1
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-gray-900">Write something</h3>
+                  <p className="text-gray-500 text-sm">
+                    Create a new post or continue an idea.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  2
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Check your posts
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    Review your articles and make changes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                  3
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Join a community
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    Post under Music, Christian, Muslim, Technology, and more.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              to="/dashboard/communities"
+              className="mt-7 w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-2xl font-semibold flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={18} />
+              Open Communities
+            </Link>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
