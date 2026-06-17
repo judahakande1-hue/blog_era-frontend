@@ -4,7 +4,7 @@ import {
   Send,
   Music,
   Cross,
-  Moon,
+
   GraduationCap,
   Laptop,
   Trophy,
@@ -33,12 +33,6 @@ function Communities() {
       icon: Cross,
       description:
         "Share Christian posts, encouragement, Bible thoughts, and discussions.",
-    },
-    {
-      name: "Muslim",
-      icon: Moon,
-      description:
-        "Share Islamic reminders, questions, knowledge, and community posts.",
     },
     {
       name: "Education",
