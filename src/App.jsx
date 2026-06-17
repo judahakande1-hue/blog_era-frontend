@@ -18,6 +18,7 @@ import ViewPost from "./components/View";
 import AuthorProfile from "./components/AuthorProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./components/VerifyEmail";
+import Communities from "./components/Communities";
 
 function PublicLayout() {
   return (
@@ -55,6 +56,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="communities" element={<Communities />} />
             <Route path="create" element={<CreatePost />} />
             <Route path="MyPost" element={<MyPosts />} />
             <Route path="explore" element={<ExplorePosts />} />

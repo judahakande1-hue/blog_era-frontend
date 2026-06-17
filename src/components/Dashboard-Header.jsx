@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   X,
+  User,
 } from "lucide-react";
 
 function DashboardHeader() {
@@ -76,6 +77,15 @@ function DashboardHeader() {
       </NavLink>
 
       <NavLink
+        to="/dashboard/communities"
+        onClick={closeMenu}
+        className={({ isActive }) => (isActive ? activeLink : normalLink)}
+      >
+        <User size={20} />
+        Communities
+      </NavLink>
+
+      <NavLink
         to="/dashboard/profile"
         onClick={closeMenu}
         className={({ isActive }) => (isActive ? activeLink : normalLink)}
@@ -86,7 +96,7 @@ function DashboardHeader() {
 
       <button
         onClick={handleLogout}
-        className="w-full md:mt-10 hover:bg-red-50 rounded-xl p-3 cursor-pointer flex items-start gap-2 text-left text-red-600 transition"
+        className="w-full md:mt-2 hover:bg-red-50 rounded-xl p-3 cursor-pointer flex items-start gap-2 text-left text-red-600 transition"
       >
         <LogOut size={20} className="mt-1" />
 
@@ -130,9 +140,7 @@ function DashboardHeader() {
         <div className="md:hidden fixed inset-0 z-50 bg-black/40">
           <div className="bg-white w-72 max-w-[85%] min-h-screen p-5 shadow-xl">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-2xl font-['JetBrains'] font-bold">
-                BlogEra
-              </h1>
+              <h1 className="text-2xl font-['JetBrains'] font-bold">BlogEra</h1>
 
               <button
                 type="button"
