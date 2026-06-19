@@ -2,7 +2,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Toast from "./Toast";
-import VerifyEmail from "./VerifyEmail"
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,7 +10,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   const [toast, setToast] = useState({
     type: "",
     message: "",
@@ -51,31 +50,28 @@ export default function SignUp() {
 
       setToast({
         type: "success",
-        message: data.message || "Account created successfully",
+        message: data.message || "Account created. Please verify your email.",
       });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.user.id || data.user._id);
-      localStorage.setItem("username", data.user.username);
-      localStorage.setItem("email", data.user.email);
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.user.id || data.user._id);
-      localStorage.setItem("username", data.user.username);
-      localStorage.setItem("email", data.user.email);
+      localStorage.setItem("pendingVerificationEmail", data.email || email);
 
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/verify-email", {
+          state: {
+            email: data.email || email,
+          },
+        });
       }, 1000);
     } catch (error) {
       setToast({
         type: "error",
-        message: `Cannot connect to backend. Try again.${error.message}`,
+        message: "Cannot connect to backend. Try again.",
       });
     } finally {
       setLoading(false);
     }
   }
+
   return (
     <div className="min-h-screen bg-gray-400 pt-24 px-4 flex flex-col items-center">
       <div className="w-full max-w-md lg:max-w-3xl flex flex-col-reverse lg:grid lg:grid-cols-2 mt-6 shadow-2xl rounded-xl overflow-hidden">
@@ -152,7 +148,6 @@ export default function SignUp() {
 
             <button
               type="submit"
-              
               disabled={loading}
               className="w-full sm:w-auto bg-purple-600 text-white mt-3 hover:bg-purple-700 font-bold py-2 px-6 rounded-full disabled:bg-gray-400"
             >

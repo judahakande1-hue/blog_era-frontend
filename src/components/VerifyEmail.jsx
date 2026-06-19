@@ -6,8 +6,13 @@ function VerifyEmail() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState(location.state?.email || "");
+  const [email, setEmail] = useState(
+    location.state?.email || localStorage.getItem("pendingVerificationEmail") || ""
+  );
+
   const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const [toast, setToast] = useState({
     type: "",
@@ -17,73 +22,117 @@ function VerifyEmail() {
   async function handleVerifyEmail(e) {
     e.preventDefault();
 
-    const response = await fetch(
-      "https://blog-api-bovz.onrender.com/api/auth/verify-email",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          code,
-        }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
+    if (!email || !code) {
       setToast({
         type: "error",
-        message: data.message || "Email verification failed",
+        message: "Please enter your email and verification code",
       });
       return;
     }
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("userId", data.user.id);
-    localStorage.setItem("username", data.user.username);
-    localStorage.setItem("email", data.user.email);
+    try {
+      setLoading(true);
 
-    setToast({
-      type: "success",
-      message: "Email verified successfully",
-    });
+      const response = await fetch(
+        "https://blog-api-bovz.onrender.com/api/auth/verify-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            code,
+          }),
+        }
+      );
 
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1000);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Email verification failed",
+        });
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.user.id || data.user._id);
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("email", data.user.email);
+      localStorage.setItem("bio", data.user.bio || "");
+      localStorage.setItem("profilePicture", data.user.profilePicture || "");
+
+      localStorage.removeItem("pendingVerificationEmail");
+
+      setToast({
+        type: "success",
+        message: data.message || "Email verified successfully",
+      });
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    } catch (error) {
+      setToast({
+        type: "error",
+        message: "Cannot connect to backend. Try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleResendCode() {
-    const response = await fetch(
-      "https://blog-api-bovz.onrender.com/api/auth/resend-verification",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-        }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
+    if (!email) {
       setToast({
         type: "error",
-        message: data.message || "Failed to resend code",
+        message: "Please enter your email first",
       });
       return;
     }
 
-    setToast({
-      type: "success",
-      message: "New verification code sent to your email",
-    });
+    try {
+      setResending(true);
+
+      const response = await fetch(
+        "https://blog-api-bovz.onrender.com/api/auth/resend-verification",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Failed to resend code",
+        });
+        return;
+      }
+
+      localStorage.setItem("pendingVerificationEmail", email);
+
+      setToast({
+        type: "success",
+        message: data.message || "New verification code sent to your email",
+      });
+    } catch (error) {
+      setToast({
+        type: "error",
+        message: "Cannot connect to backend. Try again.",
+      });
+    } finally {
+      setResending(false);
+    }
   }
 
   return (
@@ -109,6 +158,7 @@ function VerifyEmail() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Your email"
             type="email"
+            required
             className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-5 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
 
@@ -118,23 +168,26 @@ function VerifyEmail() {
             placeholder="Enter verification code"
             type="text"
             maxLength="6"
+            required
             className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-5 outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
 
           <button
             type="submit"
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl font-semibold"
+            disabled={loading}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-5 py-3 rounded-xl font-semibold"
           >
-            Verify Email
+            {loading ? "Verifying..." : "Verify Email"}
           </button>
         </form>
 
         <button
           type="button"
           onClick={handleResendCode}
-          className="w-full mt-4 border border-purple-600 text-purple-600 hover:bg-purple-50 px-5 py-3 rounded-xl font-semibold"
+          disabled={resending}
+          className="w-full mt-4 border border-purple-600 text-purple-600 hover:bg-purple-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 px-5 py-3 rounded-xl font-semibold"
         >
-          Resend Code
+          {resending ? "Sending..." : "Resend Code"}
         </button>
 
         <p className="text-sm text-gray-500 mt-5 text-center">
