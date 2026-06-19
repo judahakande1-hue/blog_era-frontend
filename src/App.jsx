@@ -17,7 +17,6 @@ import ExplorePosts from "./components/ExplorePost";
 import ViewPost from "./components/View";
 import AuthorProfile from "./components/AuthorProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
-import VerifyEmail from "./components/VerifyEmail";
 import Communities from "./components/Communities";
 
 function PublicLayout() {
@@ -51,7 +50,6 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
         </Route>
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>

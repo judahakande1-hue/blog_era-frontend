@@ -2,7 +2,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Toast from "./Toast";
-import VerifyEmail from "./VerifyEmail"
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
