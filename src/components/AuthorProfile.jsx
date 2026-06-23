@@ -74,7 +74,11 @@ function AuthorProfile() {
           <div className="w-24 h-24 rounded-full overflow-hidden bg-purple-600 text-white flex items-center justify-center text-3xl font-bold border-4 border-purple-500">
             {author.profilePicture ? (
               <img
-                src={`https://blog-api-bovz.onrender.com${author.profilePicture}`}
+                src={
+                  author.profilePicture.startsWith("http")
+                    ? author.profilePicture
+                    : `https://blog-api-bovz.onrender.com${author.profilePicture}`
+                }
                 alt={author.username}
                 className="w-full h-full object-cover"
               />

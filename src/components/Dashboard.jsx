@@ -273,7 +273,7 @@ function Dashboard() {
                     Join a community
                   </h3>
                   <p className="text-gray-500 text-sm">
-                    Post under Music, Christian, Muslim, Technology, and more.
+                    Post under Music, Christian, Technology, and more.
                   </p>
                 </div>
               </div>
