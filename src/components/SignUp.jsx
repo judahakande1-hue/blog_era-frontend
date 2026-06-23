@@ -10,7 +10,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   const [toast, setToast] = useState({
     type: "",
     message: "",
@@ -132,14 +132,16 @@ export default function SignUp() {
 
             <div className="relative w-full mb-7">
               <input
-                placeholder="Password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="border-b outline-none focus:ring-0 border-black w-full pr-8"
                 type={showPassword ? "text" : "password"}
+                value={password}
+                className="border-b outline-none focus:ring-0 border-black w-full pr-8"
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
               />
-
+              <p className="text-xs text-gray-500 mt-1">
+                Password must be at least 6 characters.
+              </p>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -151,7 +153,6 @@ export default function SignUp() {
 
             <button
               type="submit"
-              
               disabled={loading}
               className="w-full sm:w-auto bg-purple-600 text-white mt-3 hover:bg-purple-700 font-bold py-2 px-6 rounded-full disabled:bg-gray-400"
             >
