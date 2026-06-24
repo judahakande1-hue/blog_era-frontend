@@ -134,6 +134,7 @@ export default function SignUp() {
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
+                placeholder="Password"
                 className="border-b outline-none focus:ring-0 border-black w-full pr-8"
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
