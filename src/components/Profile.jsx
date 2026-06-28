@@ -1,9 +1,12 @@
 import { useState } from "react";
 import Toast from "./Toast";
+import ProfileImageViewer from "./ProfileImageViewer";
+import ImageCropper from "./ImageCropper";
 
 const API_URL = "https://blog-api-bovz.onrender.com";
 
 function Profile() {
+  const [imageToCrop, setImageToCrop] = useState("");
   const [username, setUsername] = useState(
     localStorage.getItem("username") || "",
   );
@@ -37,7 +40,7 @@ function Profile() {
     return `${API_URL}${image}`;
   }
 
-  async function handleProfilePictureChange(e) {
+  function handleProfilePictureChange(e) {
     const file = e.target.files[0];
 
     if (!file) {
@@ -45,13 +48,20 @@ function Profile() {
     }
 
     const previewUrl = URL.createObjectURL(file);
+    setImageToCrop(previewUrl);
 
+    e.target.value = "";
+  }
+
+  async function uploadCroppedProfilePicture(croppedFile) {
+    const previewUrl = URL.createObjectURL(croppedFile);
     setProfilePicture(previewUrl);
+    setImageToCrop("");
 
     const token = localStorage.getItem("token");
 
     const formData = new FormData();
-    formData.append("profilePicture", file);
+    formData.append("profilePicture", croppedFile);
 
     try {
       const response = await fetch(
@@ -75,7 +85,8 @@ function Profile() {
         return;
       }
 
-      if (data.profilePicture && data.profilePicture.startsWith("http")) {
+      if (data.profilePicture) {
+        setProfilePicture(data.profilePicture);
         localStorage.setItem("profilePicture", data.profilePicture);
       }
 
@@ -83,8 +94,6 @@ function Profile() {
         type: "success",
         message: "Profile picture updated successfully",
       });
-
-      e.target.value = "";
     } catch (error) {
       setToast({
         type: "error",
@@ -160,19 +169,23 @@ function Profile() {
         onClose={() => setToast({ type: "", message: "" })}
       />
 
+      {imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          onCancel={() => setImageToCrop("")}
+          onCropDone={uploadCroppedProfilePicture}
+        />
+      )}
+
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
         <div className="bg-gray-100 rounded-2xl p-4 md:p-6">
           <div className="bg-white rounded-2xl p-6 text-center">
-            <div className="mx-auto w-28 h-28 rounded-full overflow-hidden bg-purple-600 text-white flex items-center justify-center text-4xl font-bold border-4 border-purple-500">
-              {profilePicture ? (
-                <img
-                  src={profilePicture}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span>{username ? username.charAt(0).toUpperCase() : "U"}</span>
-              )}
+            <div className="mx-auto flex justify-center">
+              <ProfileImageViewer
+                src={getImageUrl(profilePicture)}
+                alt={username || "Profile"}
+                size="w-28 h-28"
+              />
             </div>
 
             <label className="inline-block mt-4 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full cursor-pointer font-semibold">

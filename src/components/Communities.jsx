@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import ProfileImageViewer from "./ProfileImageViewer";
 import {
   Search,
   Send,
   Music,
   Cross,
-
   GraduationCap,
   Laptop,
   Trophy,
@@ -72,11 +73,11 @@ function Communities() {
   const [error, setError] = useState("");
 
   const filteredTopics = topics.filter((topic) =>
-    topic.name.toLowerCase().includes(search.toLowerCase())
+    topic.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const selectedTopicData = topics.find(
-    (topic) => topic.name === selectedTopic
+    (topic) => topic.name === selectedTopic,
   );
 
   useEffect(() => {
@@ -335,22 +336,24 @@ function Communities() {
                       className="border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold">
-                          {post.author?.username
-                            ? post.author.username.charAt(0).toUpperCase()
-                            : "U"}
-                        </div>
+                        <ProfileImageViewer
+                          src={
+                            post.author?.profilePicture
+                              ? post.author.profilePicture.startsWith("http")
+                                ? post.author.profilePicture
+                                : `https://blog-api-bovz.onrender.com${post.author.profilePicture}`
+                              : ""
+                          }
+                          alt={post.author?.username || "User"}
+                          size="w-10 h-10"
+                        />
 
                         <div>
-                          <h4 className="font-bold text-gray-900">
-                            {post.author?.username || "Unknown User"}
-                          </h4>
-
-                          <p className="text-sm text-gray-400">
-                            {post.createdAt
-                              ? new Date(post.createdAt).toLocaleString()
-                              : "Just now"}
+                          <p className="font-bold text-gray-900">
+                            {post.author?.username || "Unknown user"}
                           </p>
+
+                          <p className="text-xs text-gray-500">{post.topic}</p>
                         </div>
                       </div>
 

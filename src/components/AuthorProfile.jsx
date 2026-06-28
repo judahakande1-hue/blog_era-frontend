@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Loader from "./Loader";
+import ProfileImageViewer from "./ProfileImageViewer";
 
 function AuthorProfile() {
   const { id } = useParams();
@@ -71,26 +72,22 @@ function AuthorProfile() {
 
       <div className="mt-8 bg-gray-100 rounded-2xl p-6">
         <div className="bg-white rounded-xl p-6">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-purple-600 text-white flex items-center justify-center text-3xl font-bold border-4 border-purple-500">
-            {author.profilePicture ? (
-              <img
-                src={
-                  author.profilePicture.startsWith("http")
-                    ? author.profilePicture
-                    : `https://blog-api-bovz.onrender.com${author.profilePicture}`
-                }
-                alt={author.username}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span>{author.username?.charAt(0).toUpperCase()}</span>
-            )}
-          </div>
+          <ProfileImageViewer
+            src={
+              author.profilePicture
+                ? author.profilePicture.startsWith("http")
+                  ? author.profilePicture
+                  : `https://blog-api-bovz.onrender.com${author.profilePicture}`
+                : ""
+            }
+            alt={author.username}
+            size="w-24 h-24"
+          />
 
           <h1 className="text-4xl font-[JetBrains] font-bold mt-5">
             {author.username}
           </h1>
-
+          
           <p className="text-gray-600 mt-3">
             {author.bio || "This writer has not added a bio yet."}
           </p>
