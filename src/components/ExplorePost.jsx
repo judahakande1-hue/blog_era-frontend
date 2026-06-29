@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
 import Loader from "./Loader";
+import { Search, ThumbsUp } from "lucide-react";
 
 function ExplorePosts() {
   const [posts, setPosts] = useState([]);
@@ -10,7 +10,7 @@ function ExplorePosts() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showMoreCategories, setShowMoreCategories] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
-
+  const userId = localStorage.getItem("userId");
   const mainCategories = ["All", "Technology", "Programming", "Faith"];
 
   const moreCategories = [
@@ -25,7 +25,9 @@ function ExplorePosts() {
 
   useEffect(() => {
     async function getPosts() {
-      const response = await fetch("https://blog-api-bovz.onrender.com/api/posts");
+      const response = await fetch(
+        "https://blog-api-bovz.onrender.com/api/posts",
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -46,19 +48,60 @@ function ExplorePosts() {
   const categoryToUse = customCategory.trim() || selectedCategory;
 
   const filteredPosts = publishedPosts.filter((post) => {
-  const matchesSearch = post.title
-    .toLowerCase()
-    .includes(search.toLowerCase());
+    const matchesSearch = post.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-  const matchesCategory =
-    categoryToUse === "All" ||
-    post.category.toLowerCase().includes(categoryToUse.toLowerCase());
+    const matchesCategory =
+      categoryToUse === "All" ||
+      post.category.toLowerCase().includes(categoryToUse.toLowerCase());
 
-  return matchesSearch && matchesCategory;
-});
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) {
     return <Loader />;
+  }
+
+  async function handleLike(postId) {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to like posts");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://blog-api-bovz.onrender.com/api/posts/${postId}/like`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Failed to like post");
+        return;
+      }
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? {
+                ...post,
+                likes: data.likes,
+              }
+            : post,
+        ),
+      );
+    } catch (error) {
+      alert("Something went wrong while liking post");
+    }
   }
 
   return (
@@ -190,6 +233,28 @@ function ExplorePosts() {
               <p className="text-gray-600 mt-3 overflow-hidden">
                 {post.content.slice(0, 150)}...
               </p>
+
+              <button
+                type="button"
+                onClick={() => handleLike(post._id)}
+                className={`mt-4 flex items-center gap-2 font-semibold transition ${
+                  post.likes?.some((id) => id === userId || id?._id === userId)
+                    ? "text-blue-600"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
+              >
+                <ThumbsUp
+                  size={20}
+                  fill={
+                    post.likes?.some(
+                      (id) => id === userId || id?._id === userId,
+                    )
+                      ? "currentColor"
+                      : "none"
+                  }
+                />
+                <span>{post.likes?.length || 0}</span>
+              </button>
 
               <p className="text-sm text-gray-500 mt-3">
                 Author:{" "}

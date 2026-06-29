@@ -2,6 +2,8 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import Toast from "./Toast";
 import Loader from "./Loader";
+import ProfileImageViewer from "./ProfileImageViewer";
+import { ThumbsUp } from "lucide-react";
 
 function ViewPost() {
   const { id } = useParams();
@@ -64,6 +66,22 @@ function ViewPost() {
 
     getPostAndComments();
   }, [id]);
+
+  function getImageUrl(image) {
+    if (!image) {
+      return "";
+    }
+
+    if (
+      image.startsWith("http") ||
+      image.startsWith("blob:") ||
+      image.startsWith("data:")
+    ) {
+      return image;
+    }
+
+    return `https://blog-api-bovz.onrender.com${image}`;
+  }
 
   async function handleAddComment(e) {
     e.preventDefault();
@@ -137,7 +155,49 @@ function ViewPost() {
       message: "Comment deleted successfully",
     });
   }
+  async function handleLike() {
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      setToast({
+        type: "error",
+        message: "Please login to like posts",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://blog-api-bovz.onrender.com/api/posts/${post._id}/like`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Failed to like post",
+        });
+        return;
+      }
+
+      setPost((prevPost) => ({
+        ...prevPost,
+        likes: data.likes,
+      }));
+    } catch (error) {
+      setToast({
+        type: "error",
+        message: "Something went wrong while liking post",
+      });
+    }
+  }
   if (loading) {
     return <Loader />;
   }
@@ -179,9 +239,52 @@ function ViewPost() {
             {post.title}
           </h1>
 
-          <p className="text-sm text-gray-500 mb-4">
-            Author: {post.author?.username || "Unknown"}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <ProfileImageViewer
+                src={getImageUrl(post.author?.profilePicture)}
+                alt={post.author?.username || "Author"}
+                size="w-12 h-12"
+              />
+
+              <div>
+                <p className="text-sm text-gray-500">Written by</p>
+
+                <Link
+                  to={`/dashboard/author/${post.author?._id}`}
+                  className="font-bold text-purple-600 hover:underline"
+                >
+                  {post.author?.username || "Unknown"}
+                </Link>
+
+                {post.author?.bio && (
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                    {post.author.bio}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLike}
+              className={`flex items-center gap-2 font-semibold transition ${
+                post.likes?.some((id) => id === userId || id?._id === userId)
+                  ? "text-blue-600"
+                  : "text-gray-600 hover:text-blue-600"
+              }`}
+            >
+              <ThumbsUp
+                size={22}
+                fill={
+                  post.likes?.some((id) => id === userId || id?._id === userId)
+                    ? "currentColor"
+                    : "none"
+                }
+              />
+              <span>{post.likes?.length || 0}</span>
+            </button>
+          </div>
 
           <p className="text-gray-700 mb-6 whitespace-pre-line break-words">
             {post.content}
@@ -240,7 +343,9 @@ function ViewPost() {
                         {comment.author?.username || "Unknown user"}
                       </p>
 
-                      <p className="text-gray-700 mt-2 break-words">{comment.text}</p>
+                      <p className="text-gray-700 mt-2 break-words">
+                        {comment.text}
+                      </p>
                     </div>
 
                     {comment.author?._id === userId && (
