@@ -43,10 +43,10 @@ function AuthorProfile() {
         }
 
         setPosts(postsData);
-        setLoading(false);
       } catch (error) {
-        alert("Something went wrong while loading author profile");
-        setLoading(false);
+        console.log("FOLLOW ERROR:", error);
+
+        alert(error.message || "Something went wrong while following user");
       }
     }
 
@@ -77,7 +77,14 @@ function AuthorProfile() {
         },
       );
 
-      const data = await response.json();
+      const text = await response.text();
+      let data = {};
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.log("FOLLOW RAW RESPONSE:", text);
+      }
 
       if (!response.ok) {
         alert(data.message || "Failed to follow user");

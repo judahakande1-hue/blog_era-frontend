@@ -1,23 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Toast from "./Toast";
 import ProfileImageViewer from "./ProfileImageViewer";
 import ImageCropper from "./ImageCropper";
+import Loader from "./Loader";
 
 const API_URL = "https://blog-api-bovz.onrender.com";
 
 function Profile() {
   const [imageToCrop, setImageToCrop] = useState("");
+
   const [username, setUsername] = useState(
     localStorage.getItem("username") || "",
   );
 
-  const [email] = useState(localStorage.getItem("email") || "");
+  const [email, setEmail] = useState(localStorage.getItem("email") || "");
 
   const [bio, setBio] = useState(localStorage.getItem("bio") || "");
 
   const [profilePicture, setProfilePicture] = useState(
     localStorage.getItem("profilePicture") || "",
   );
+
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+
+  const [loading, setLoading] = useState(true);
 
   const [toast, setToast] = useState({
     type: "",
@@ -39,6 +46,56 @@ function Profile() {
 
     return `${API_URL}${image}`;
   }
+
+  useEffect(() => {
+    async function getProfile() {
+      const token = localStorage.getItem("token");
+
+      try {
+        const response = await fetch(`${API_URL}/api/users/me/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setToast({
+            type: "error",
+            message: data.message || "Failed to load profile",
+          });
+
+          setLoading(false);
+          return;
+        }
+
+        setUsername(data.username || "");
+        setEmail(data.email || "");
+        setBio(data.bio || "");
+        setProfilePicture(data.profilePicture || "");
+
+        setFollowersCount(data.followersCount || data.followers?.length || 0);
+        setFollowingCount(data.followingCount || data.following?.length || 0);
+
+        localStorage.setItem("username", data.username || "");
+        localStorage.setItem("email", data.email || "");
+        localStorage.setItem("bio", data.bio || "");
+        localStorage.setItem("profilePicture", data.profilePicture || "");
+
+        setLoading(false);
+      } catch (error) {
+        setToast({
+          type: "error",
+          message: "Something went wrong while loading profile",
+        });
+
+        setLoading(false);
+      }
+    }
+
+    getProfile();
+  }, []);
 
   function handleProfilePictureChange(e) {
     const file = e.target.files[0];
@@ -64,16 +121,13 @@ function Profile() {
     formData.append("profilePicture", croppedFile);
 
     try {
-      const response = await fetch(
-        "https://blog-api-bovz.onrender.com/api/users/me/profile-picture",
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
+      const response = await fetch(`${API_URL}/api/users/me/profile-picture`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -132,14 +186,14 @@ function Profile() {
 
       setUsername(data.username || "");
       setBio(data.bio || "");
+      setProfilePicture(data.profilePicture || "");
+
+      setFollowersCount(data.followersCount || data.followers?.length || 0);
+      setFollowingCount(data.followingCount || data.following?.length || 0);
 
       localStorage.setItem("username", data.username || "");
       localStorage.setItem("bio", data.bio || "");
-
-      if (data.profilePicture) {
-        setProfilePicture(data.profilePicture);
-        localStorage.setItem("profilePicture", data.profilePicture);
-      }
+      localStorage.setItem("profilePicture", data.profilePicture || "");
 
       setToast({
         type: "success",
@@ -151,6 +205,10 @@ function Profile() {
         message: "Something went wrong while saving profile",
       });
     }
+  }
+
+  if (loading) {
+    return <Loader />;
   }
 
   return (
@@ -205,10 +263,24 @@ function Profile() {
             <p className="text-purple-600 mt-1 break-words">
               {email || "No email"}
             </p>
-
-            <p className="text-gray-600 mt-5 leading-7 break-words">
+            <p className="text-gray-600 mt-2 leading-7 break-words">
               {bio || "No bio added yet."}
             </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="bg-gray-100 rounded-xl p-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {followersCount}
+                </p>
+                <p className="text-sm text-gray-500">Followers</p>
+              </div>
+
+              <div className="bg-gray-100 rounded-xl p-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {followingCount}
+                </p>
+                <p className="text-sm text-gray-500">Following</p>
+              </div>
+            </div>
           </div>
         </div>
 

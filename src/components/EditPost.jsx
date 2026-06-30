@@ -6,6 +6,7 @@ import Loader from "./Loader";
 function EditPost() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [toast, setToast] = useState({
     type: "",
     message: "",
@@ -30,103 +31,96 @@ function EditPost() {
     "Faith",
   ];
 
-  async function handleUpdatePost(statusValue) {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      `https://blog-api-bovz.onrender.com/api/posts/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          category,
-          status: statusValue,
-        }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      alert(data.message || "Failed to update post");
-      return;
-    }
-
-    alert(statusValue === "Published" ? "Post published" : "Draft saved");
-  }
-
   useEffect(() => {
     async function getPostToEdit() {
-      const response = await fetch(
-        `https://blog-api-bovz.onrender.com/api/posts/${id}`,
-      );
-      const data = await response.json();
+      try {
+        const response = await fetch(
+          `https://blog-api-bovz.onrender.com/api/posts/${id}`,
+        );
 
-      if (!response.ok) {
+        const data = await response.json();
+
+        if (!response.ok) {
+          setToast({
+            type: "error",
+            message: data.message || "Failed to load post",
+          });
+
+          setLoading(false);
+          return;
+        }
+
+        setTitle(data.title || "");
+        setCategory(data.category || "");
+        setContent(data.content || "");
+        setLoading(false);
+      } catch (error) {
         setToast({
           type: "error",
-          message: data.message || "Failed to load post",
+          message: "Something went wrong while loading post",
         });
 
         setLoading(false);
-        return;
       }
-
-      setTitle(data.title);
-      setCategory(data.category);
-      setContent(data.content);
-      setLoading(false);
     }
 
     getPostToEdit();
   }, [id]);
 
-  async function handleUpdatePost() {
+  async function handleUpdatePost(statusValue) {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `https://blog-api-bovz.onrender.com/api/posts/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await fetch(
+        `https://blog-api-bovz.onrender.com/api/posts/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            category,
+            content,
+            status: statusValue,
+          }),
         },
-        body: JSON.stringify({
-          title,
-          category,
-          content,
-        }),
-      },
-    );
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setToast({
+          type: "error",
+          message: data.message || "Failed to update post",
+        });
+        return;
+      }
+
+      setToast({
+        type: "success",
+        message:
+          statusValue === "Published"
+            ? "Post published successfully"
+            : "Draft saved successfully",
+      });
+
+      setTimeout(() => {
+        navigate("/dashboard/MyPost");
+      }, 1000);
+    } catch (error) {
       setToast({
         type: "error",
-        message: data.message || "Failed to update post",
+        message: "Something went wrong while updating post",
       });
-      return;
     }
-
-    setToast({
-      type: "success",
-      message: "Post updated successfully",
-    });
-
-    setTimeout(() => {
-      navigate("/dashboard/MyPost");
-    }, 1000);
   }
+
   if (loading) {
     return <Loader />;
   }
+
   return (
     <div className="min-h-screen bg-white p-8">
       <h1 className="text-4xl font-[JetBrains] font-bold mb-4">Edit Post</h1>
@@ -202,11 +196,11 @@ function EditPost() {
           />
         </div>
 
-        <div className="gap-5 flex">
+        <div className="gap-5 flex flex-col sm:flex-row">
           <button
             type="button"
             onClick={() => handleUpdatePost("Draft")}
-            className="border border-purple-600 text-purple-600 px-4 py-2 rounded-lg"
+            className="border border-purple-600 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-50"
           >
             Save as Draft
           </button>
@@ -214,7 +208,7 @@ function EditPost() {
           <button
             type="button"
             onClick={() => handleUpdatePost("Published")}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
           >
             Publish
           </button>
