@@ -13,6 +13,7 @@ function MyPosts() {
     message: "",
   });
 
+  
   useEffect(() => {
     async function getMyPosts() {
       try {
@@ -243,7 +244,7 @@ function MyPosts() {
                       to={`/dashboard/edit/${post._id}`}
                       className="text-center border border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-lg"
                     >
-                      Edit
+                      {post.status === "Draft" ? "Continue Draft" : "Edit"}
                     </Link>
 
                     <button

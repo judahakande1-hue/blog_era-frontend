@@ -30,6 +30,36 @@ function EditPost() {
     "Faith",
   ];
 
+  async function handleUpdatePost(statusValue) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `https://blog-api-bovz.onrender.com/api/posts/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          content,
+          category,
+          status: statusValue,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Failed to update post");
+      return;
+    }
+
+    alert(statusValue === "Published" ? "Post published" : "Draft saved");
+  }
+
   useEffect(() => {
     async function getPostToEdit() {
       const response = await fetch(
@@ -172,13 +202,23 @@ function EditPost() {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={handleUpdatePost}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl"
-        >
-          Save Changes
-        </button>
+        <div className="gap-5 flex">
+          <button
+            type="button"
+            onClick={() => handleUpdatePost("Draft")}
+            className="border border-purple-600 text-purple-600 px-4 py-2 rounded-lg"
+          >
+            Save as Draft
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleUpdatePost("Published")}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+          >
+            Publish
+          </button>
+        </div>
       </div>
     </div>
   );
