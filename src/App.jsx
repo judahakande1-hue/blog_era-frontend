@@ -18,6 +18,8 @@ import ViewPost from "./components/View";
 import AuthorProfile from "./components/AuthorProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Communities from "./components/Communities";
+import Followers from "./components/Followers";
+import Following from "./components/Following";
 
 function PublicLayout() {
   return (
@@ -62,6 +64,8 @@ function App() {
             <Route path="view/:id" element={<ViewPost />} />
             <Route path="edit/:id" element={<EditPost />} />
             <Route path="author/:id" element={<AuthorProfile />} />
+            <Route path="author/:id/followers" element={<Followers />} />
+            <Route path="author/:id/following" element={<Following />} />
           </Route>
         </Route>
       </Routes>

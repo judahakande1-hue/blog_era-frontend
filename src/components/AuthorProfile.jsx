@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Loader from "./Loader";
+import Toast from "./Toast";
 import ProfileImageViewer from "./ProfileImageViewer";
 
 function AuthorProfile() {
@@ -13,8 +14,15 @@ function AuthorProfile() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [toast, setToast] = useState({
+    type: "",
+    message: "",
+  });
+
   useEffect(() => {
     async function getAuthorProfile() {
+      setLoading(true);
+
       try {
         const userResponse = await fetch(
           `https://blog-api-bovz.onrender.com/api/users/${id}`,
@@ -23,8 +31,12 @@ function AuthorProfile() {
         const userData = await userResponse.json();
 
         if (!userResponse.ok) {
-          alert(userData.message || "Failed to load author");
-          setLoading(false);
+          setToast({
+            type: "error",
+            message: userData.message || "Failed to load author",
+          });
+
+          setAuthor(null);
           return;
         }
 
@@ -37,16 +49,27 @@ function AuthorProfile() {
         const postsData = await postsResponse.json();
 
         if (!postsResponse.ok) {
-          alert(postsData.message || "Failed to load author posts");
-          setLoading(false);
+          setToast({
+            type: "error",
+            message: postsData.message || "Failed to load author posts",
+          });
+
+          setPosts([]);
           return;
         }
 
         setPosts(postsData);
       } catch (error) {
-        console.log("FOLLOW ERROR:", error);
+        console.log("AUTHOR PROFILE ERROR:", error);
 
-        alert(error.message || "Something went wrong while following user");
+        setToast({
+          type: "error",
+          message: "Something went wrong while loading author profile",
+        });
+
+        setAuthor(null);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -60,9 +83,24 @@ function AuthorProfile() {
       followerId === currentUserId || followerId?._id === currentUserId,
   );
 
+  function getImageUrl(image) {
+    if (!image) {
+      return "";
+    }
+
+    if (image.startsWith("http")) {
+      return image;
+    }
+
+    return `https://blog-api-bovz.onrender.com${image}`;
+  }
+
   async function handleFollow() {
     if (!token) {
-      alert("Please login to follow this user");
+      setToast({
+        type: "error",
+        message: "Please login to follow this user",
+      });
       return;
     }
 
@@ -77,17 +115,13 @@ function AuthorProfile() {
         },
       );
 
-      const text = await response.text();
-      let data = {};
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        console.log("FOLLOW RAW RESPONSE:", text);
-      }
+      const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Failed to follow user");
+        setToast({
+          type: "error",
+          message: data.message || "Failed to follow user",
+        });
         return;
       }
 
@@ -96,21 +130,26 @@ function AuthorProfile() {
           return prevAuthor;
         }
 
-        const oldFollowers = prevAuthor.followers || [];
-
         return {
           ...prevAuthor,
-          followers: data.isFollowing
-            ? [...oldFollowers, currentUserId]
-            : oldFollowers.filter(
-                (followerId) =>
-                  followerId !== currentUserId &&
-                  followerId?._id !== currentUserId,
-              ),
+          followers: data.followers || prevAuthor.followers || [],
+          following: data.following || prevAuthor.following || [],
+          followersCount: data.followersCount || 0,
+          followingCount: data.followingCount || 0,
         };
       });
+
+      setToast({
+        type: "success",
+        message: data.message || "Follow updated",
+      });
     } catch (error) {
-      alert("Something went wrong while following user");
+      console.log("FOLLOW ERROR:", error);
+
+      setToast({
+        type: "error",
+        message: "Something went wrong while following user",
+      });
     }
   }
 
@@ -121,6 +160,12 @@ function AuthorProfile() {
   if (!author) {
     return (
       <div className="p-8">
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast({ type: "", message: "" })}
+        />
+
         <h1 className="text-3xl font-bold">Author not found</h1>
 
         <Link
@@ -135,6 +180,12 @@ function AuthorProfile() {
 
   return (
     <div className="p-8 min-h-screen w-full">
+      <Toast
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast({ type: "", message: "" })}
+      />
+
       <Link
         to="/dashboard/explore"
         className="text-purple-600 hover:underline font-semibold"
@@ -145,13 +196,7 @@ function AuthorProfile() {
       <div className="mt-8 bg-gray-100 rounded-2xl p-6">
         <div className="bg-white rounded-xl p-6">
           <ProfileImageViewer
-            src={
-              author.profilePicture
-                ? author.profilePicture.startsWith("http")
-                  ? author.profilePicture
-                  : `https://blog-api-bovz.onrender.com${author.profilePicture}`
-                : ""
-            }
+            src={getImageUrl(author.profilePicture)}
             alt={author.username || "Author"}
             size="w-24 h-24"
           />
@@ -169,13 +214,21 @@ function AuthorProfile() {
               Published Posts: {posts.length}
             </div>
 
-            <div className="bg-gray-100 text-gray-700 inline-block px-4 py-2 rounded-xl font-semibold">
-              Followers: {author.followers?.length || 0}
-            </div>
+            <Link
+              to={`/dashboard/author/${author._id}/followers`}
+              className="bg-gray-100 text-gray-700 inline-block px-4 py-2 rounded-xl font-semibold hover:bg-gray-200"
+            >
+              Followers:{" "}
+              {author.followersCount || author.followers?.length || 0}
+            </Link>
 
-            <div className="bg-gray-100 text-gray-700 inline-block px-4 py-2 rounded-xl font-semibold">
-              Following: {author.following?.length || 0}
-            </div>
+            <Link
+              to={`/dashboard/author/${author._id}/following`}
+              className="bg-gray-100 text-gray-700 inline-block px-4 py-2 rounded-xl font-semibold hover:bg-gray-200"
+            >
+              Following:{" "}
+              {author.followingCount || author.following?.length || 0}
+            </Link>
           </div>
 
           {!isMyProfile && (
@@ -210,11 +263,11 @@ function AuthorProfile() {
                 <h3 className="text-2xl font-bold">{post.title}</h3>
 
                 <p className="text-purple-600 font-semibold mt-1">
-                  {post.category}
+                  {post.category || "Uncategorized"}
                 </p>
 
                 <p className="text-gray-600 mt-3">
-                  {post.content.slice(0, 160)}...
+                  {post.content?.slice(0, 160)}...
                 </p>
 
                 <Link
