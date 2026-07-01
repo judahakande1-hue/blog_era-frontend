@@ -15,7 +15,7 @@ function Explore() {
         Discover posts, writers, and new voices across BlogEra.
       </p>
 
-      <div className="bg-gray-100 rounded-2xl p-2 mb-5 inline-flex gap-2">
+      <div className="bg-gray-100 rounded-2xl p-2 mb-3 justify-center align-middle inline-flex gap-2">
         <button
           type="button"
           onClick={() => setActiveTab("posts")}
