@@ -9,6 +9,7 @@ const API_URL = "https://blog-api-bovz.onrender.com";
 function Followers() {
   const { id } = useParams();
 
+  const [author, setAuthor] = useState(null);
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,21 +33,38 @@ function Followers() {
   useEffect(() => {
     async function getFollowers() {
       try {
-        const response = await fetch(`${API_URL}/api/users/${id}/followers`);
+        const authorResponse = await fetch(`${API_URL}/api/users/${id}`);
+        const authorData = await authorResponse.json();
 
-        const data = await response.json();
-
-        if (!response.ok) {
+        if (!authorResponse.ok) {
           setToast({
             type: "error",
-            message: data.message || "Failed to load followers",
+            message: authorData.message || "Failed to load user",
           });
 
           setLoading(false);
           return;
         }
 
-        setFollowers(data);
+        setAuthor(authorData);
+
+        const followersResponse = await fetch(
+          `${API_URL}/api/users/${id}/followers`,
+        );
+
+        const followersData = await followersResponse.json();
+
+        if (!followersResponse.ok) {
+          setToast({
+            type: "error",
+            message: followersData.message || "Failed to load followers",
+          });
+
+          setLoading(false);
+          return;
+        }
+
+        setFollowers(followersData);
         setLoading(false);
       } catch (error) {
         setToast({
@@ -77,59 +95,112 @@ function Followers() {
         to={`/dashboard/author/${id}`}
         className="text-purple-600 hover:underline font-semibold"
       >
-        ← Back to Author Profile
+        ← Back to Profile
       </Link>
 
-      <h1 className="text-3xl md:text-4xl font-[JetBrains] font-bold mt-6 mb-3">
-        Followers
-      </h1>
+      <div className="mt-8 bg-gray-100 rounded-2xl p-4 md:p-6">
+        <div className="bg-white rounded-2xl p-5 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <ProfileImageViewer
+              src={getImageUrl(author?.profilePicture)}
+              alt={author?.username || "User"}
+              size="w-24 h-24"
+            />
 
-      <p className="text-gray-600 mb-8">
-        People who are following this BlogEra user.
-      </p>
+            <div>
+              <p className="text-purple-600 font-semibold mb-1">
+                BlogEra Profile Network
+              </p>
 
-      {followers.length === 0 ? (
-        <div className="bg-gray-100 rounded-2xl p-6 text-center">
-          <h2 className="text-2xl font-bold">No followers yet</h2>
-          <p className="text-gray-500 mt-2">
-            This user does not have followers yet.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-gray-100 rounded-2xl p-4 md:p-6 space-y-4">
-          {followers.map((user) => (
-            <div
-              key={user._id}
-              className="bg-white rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <ProfileImageViewer
-                  src={getImageUrl(user.profilePicture)}
-                  alt={user.username || "User"}
-                  size="w-14 h-14"
-                />
+              <h1 className="text-3xl md:text-4xl font-[JetBrains] font-bold">
+                {author?.username || "User"}’s Followers
+              </h1>
 
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {user.username || "Unknown user"}
-                  </h2>
+              <p className="text-gray-600 mt-2 leading-7">
+                These are the people following{" "}
+                <span className="font-semibold text-gray-800">
+                  {author?.username || "this user"}
+                </span>{" "}
+                on BlogEra.
+              </p>
 
-                  <p className="text-gray-500 text-sm line-clamp-1">
-                    {user.bio || "No bio added yet."}
-                  </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <div className="bg-purple-50 text-purple-700 px-4 py-2 rounded-xl font-semibold">
+                  {followers.length}{" "}
+                  {followers.length === 1 ? "Follower" : "Followers"}
+                </div>
+
+                <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl font-semibold">
+                  Following:{" "}
+                  {author?.followingCount || author?.following?.length || 0}
                 </div>
               </div>
-
-              <Link
-                to={`/dashboard/author/${user._id}`}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-center"
-              >
-                View Profile
-              </Link>
             </div>
-          ))}
+          </div>
         </div>
-      )}
+      </div>
+
+      <div className="mt-8">
+        {followers.length === 0 ? (
+          <div className="bg-gray-100 rounded-2xl p-6 text-center">
+            <div className="bg-white rounded-xl p-8 border-2 border-dashed border-gray-300">
+              <h2 className="text-2xl font-bold">No followers yet</h2>
+
+              <p className="text-gray-500 mt-2">
+                {author?.username || "This user"} does not have followers yet.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-100 rounded-2xl p-4 md:p-6">
+            <h2 className="text-2xl font-bold mb-5">All Followers</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {followers.map((user) => (
+                <div
+                  key={user._id}
+                  className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-md transition"
+                >
+                  <div className="flex items-start gap-4">
+                    <ProfileImageViewer
+                      src={getImageUrl(user.profilePicture)}
+                      alt={user.username || "User"}
+                      size="w-16 h-16"
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold break-words">
+                        {user.username || "Unknown user"}
+                      </h3>
+
+                      <p className="text-gray-500 text-sm mt-1 line-clamp-2">
+                        {user.bio || "No bio added yet."}
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                          Followers: {user.followers?.length || 0}
+                        </span>
+
+                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                          Following: {user.following?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={`/dashboard/author/${user._id}`}
+                    className="block mt-5 text-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl font-semibold"
+                  >
+                    View Profile
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
