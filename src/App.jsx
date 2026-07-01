@@ -13,7 +13,7 @@ import CreatePost from "./components/CreatePost";
 import MyPosts from "./components/MyPost";
 import Profile from "./components/Profile";
 import EditPost from "./components/EditPost";
-import ExplorePosts from "./components/ExplorePost";
+import Explore from "./components/Explore";
 import ViewPost from "./components/View";
 import AuthorProfile from "./components/AuthorProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -53,13 +53,14 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
         </Route>
+
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="communities" element={<Communities />} />
             <Route path="create" element={<CreatePost />} />
             <Route path="MyPost" element={<MyPosts />} />
-            <Route path="explore" element={<ExplorePosts />} />
+            <Route path="explore" element={<Explore />} />
             <Route path="profile" element={<Profile />} />
             <Route path="view/:id" element={<ViewPost />} />
             <Route path="edit/:id" element={<EditPost />} />
